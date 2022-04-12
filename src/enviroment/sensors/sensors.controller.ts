@@ -5,8 +5,8 @@ import { Response } from 'express';
 export class SensorsController {
   constructor() {}
 
-  @Get('/')
-  getAllStatus(@Res() res: Response) {
-    return res.send({ ok: 'sensors' });
-  }
+  // @Get('/conditions')
+  // getAllStatus(@Res() res: Response) {
+  //   return res.send({ humedity, temperature });
+  // }
 }

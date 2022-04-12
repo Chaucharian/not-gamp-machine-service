@@ -5,12 +5,18 @@ import { AppService } from './app.service';
 import { EnviromentModule } from './enviroment/enviroment.module';
 import { ImagesModule } from './enviroment/images/images.module';
 import { SensorsModule } from './enviroment/sensors/sensors.module';
-
+import { ConfigModule } from '@nestjs/config';
+import config from './config/conifg';
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
     ImagesModule,
     SensorsModule,
     EnviromentModule,
+    ScheduleModule.forRoot(),
+    ConfigModule.forRoot({
+      load: [config],
+    }),
     RouterModule.register([
       {
         path: '/enviroment',
