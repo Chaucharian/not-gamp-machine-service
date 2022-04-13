@@ -8,7 +8,7 @@ export class SensorCron {
 
   //   @Interval(900 * 1000 * 8) // 2hs
   @Interval(1000) // 2hs
-  handleCron(data) {
+  writeData(data) {
     this.logger.debug('EEE', data);
   }
 }
