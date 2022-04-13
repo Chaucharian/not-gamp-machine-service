@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { SensorCron } from '../crons/sensor.cron';
 import firebase from 'firebase-admin';
 import { ConfigService } from '@nestjs/config';
+
 @Injectable()
 export class SensorsService {
   constructor(private configService: ConfigService) {
