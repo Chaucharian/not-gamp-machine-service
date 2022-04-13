@@ -1,19 +1,41 @@
-import { Injectable } from '@nestjs/common';
-import { SensorCron } from '../crons/sensor.cron';
+import { Injectable, Logger } from '@nestjs/common';
 import firebase from 'firebase-admin';
 import { ConfigService } from '@nestjs/config';
+import { CronManager } from '../crons/CronManager';
+import { CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class SensorsService {
-  constructor(private configService: ConfigService) {
-    console.log(new SensorCron());
+  private measurements = {
+    temperature: '0%',
+    humidity: '0%',
+  };
+  private readonly logger = new Logger(SensorsService.name);
+
+  constructor(
+    private configService: ConfigService,
+    private cronManager: CronManager,
+  ) {
     firebase.initializeApp({
       credential: firebase.credential.cert(configService.get('firebase')),
       databaseURL: 'https://not-gamp-machine.firebaseio.com',
     });
+
+    cronManager.addCronJob(
+      'save_conditions',
+      CronExpression.EVERY_2_HOURS,
+      () => this.writeSensorData(),
+    );
   }
 
-  readSensorRange(from, to) {
+  public getMeasurements() {
+    return this.measurements;
+  }
+  public setMeasurements({ temperature, humidity }) {
+    this.measurements = { temperature, humidity };
+  }
+
+  public readSensorRange(from, to) {
     let chartData = [];
     return firebase
       .database()
@@ -21,8 +43,8 @@ export class SensorsService {
       .once('value')
       .then(function (snapshot) {
         const responseArray = Object.keys(snapshot.val());
-        let filteredData = [];
-        for (let index of responseArray) {
+        const filteredData = [];
+        for (const index of responseArray) {
           filteredData.push(snapshot.val()[String(index)]);
         }
         chartData = filteredData.filter(
@@ -32,13 +54,16 @@ export class SensorsService {
       });
   }
 
-  writeSensorData(temperature, humedity) {
+  private writeSensorData() {
     const timestamp = Date.now();
+    const { temperature, humidity } = this.measurements;
+
     firebase.database().ref('sensordata/data').push({
       temperature,
-      humedity,
+      humidity,
       timestamp,
     });
-    console.log(`Data sent to FireBase correctly at ${timestamp}`);
+
+    this.logger.log(`Data sent to FireBase correctly at ${timestamp}`);
   }
 }

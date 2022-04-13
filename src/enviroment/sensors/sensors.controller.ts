@@ -1,22 +1,28 @@
-import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, Query, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
+import { SensorsService } from './sensors.service';
 
 @Controller()
 export class SensorsController {
-  private humedity = '0%';
-  private temperature = '0%';
-  constructor() {}
+  constructor(private sensorService: SensorsService) {}
+
+  @Get('/range')
+  async getRawData(@Res() res: Response, @Query() params) {
+    const { from, to } = params;
+    const data = await this.sensorService.readSensorRange(from, to);
+    return res.send({ data });
+  }
 
   @Get('/')
-  getRawData(@Res() res: Response) {
-    return res.send({ humedity: this.humedity, temperature: this.temperature });
+  getMeasurements(@Res() res) {
+    return res.send(this.sensorService.getMeasurements());
   }
 
   @Post('/')
-  setRawData(@Res() res, @Body() payload: any) {
-    const { h, t } = payload;
-    this.humedity = h;
-    this.temperature = t;
-    return res.send({ message: 'ok' });
+  setMeasurements(@Res() res, @Body() payload) {
+    const { temperature, humidity } = payload;
+    return res.send(
+      this.sensorService.setMeasurements({ temperature, humidity }),
+    );
   }
 }
