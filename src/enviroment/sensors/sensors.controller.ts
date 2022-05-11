@@ -9,8 +9,8 @@ export class SensorsController {
   @Get('/range')
   async getRawData(@Res() res: Response, @Query() params) {
     const { from, to } = params;
-    const data = await this.sensorService.readSensorRange(from, to);
-    return res.send({ data });
+    const response = await this.sensorService.readSensorRange(from, to);
+    return res.send(response);
   }
 
   @Get('/')
