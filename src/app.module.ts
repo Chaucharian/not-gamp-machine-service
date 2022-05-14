@@ -8,6 +8,7 @@ import { SensorsModule } from './enviroment/sensors/sensors.module';
 import { ConfigModule } from '@nestjs/config';
 import config from './config/conifg';
 import { ScheduleModule } from '@nestjs/schedule';
+import { PowerModule } from './enviroment/power/power.module';
 @Module({
   imports: [
     ImagesModule,
@@ -25,6 +26,10 @@ import { ScheduleModule } from '@nestjs/schedule';
           {
             path: '/sensors',
             module: SensorsModule,
+          },
+          {
+            path: '/power',
+            module: PowerModule,
           },
           {
             path: '/images',

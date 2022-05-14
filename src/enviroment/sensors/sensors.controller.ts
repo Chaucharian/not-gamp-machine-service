@@ -4,6 +4,7 @@ import { SensorsService } from './sensors.service';
 
 @Controller()
 export class SensorsController {
+  private data = { distance: 0 };
   constructor(private sensorService: SensorsService) {}
 
   @Get('/range')
@@ -15,14 +16,17 @@ export class SensorsController {
 
   @Get('/')
   getMeasurements(@Res() res) {
-    return res.send(this.sensorService.getMeasurements());
+    return res.send(this.data);
+    // return res.send(this.sensorService.getMeasurements());
   }
 
   @Post('/')
   setMeasurements(@Res() res, @Body() payload) {
-    const { temperature, humidity } = payload;
-    return res.send(
-      this.sensorService.setMeasurements({ temperature, humidity }),
-    );
+    const { temperature, humidity, distance } = payload;
+    this.data = { distance };
+    // console.log('DATA', payload);
+    // return res.send(
+    //   this.sensorService.setMeasurements({ temperature, humidity }),
+    // );
   }
 }
