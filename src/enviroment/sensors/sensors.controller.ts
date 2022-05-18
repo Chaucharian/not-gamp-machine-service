@@ -35,11 +35,8 @@ export class SensorsController {
   @UseAuth()
   @Post('/')
   setMeasurements(@Req() req: any, @Res() res, @Body() payload) {
-    const { temperature, humidity, distance } = payload;
-
-    this.data = { distance };
+    this.data = { ...this.data, ...payload };
     return res.send(this.data);
-
     // console.log('DATA', payload);
     // return res.send(
     //   this.sensorService.setMeasurements({ temperature, humidity }),

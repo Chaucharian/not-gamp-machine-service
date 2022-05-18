@@ -8,6 +8,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 8080;
   app.setGlobalPrefix(`/api/${process.env.API_VERSION}`);
+
   await app.listen(port, () => console.log(`NotGamp Service: ${port}`));
 }
 bootstrap();

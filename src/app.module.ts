@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { HttpModule, Module } from '@nestjs/common';
 import { Routes, RouterModule } from '@nestjs/core';
 // import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -10,6 +10,8 @@ import config from './config/configuration';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PowerModule } from './enviroment/power/power.module';
 import { AuthModule } from './auth/auth.module';
+import { CronModule } from './enviroment/crons/cron.module';
+import { AppController } from './app.controller';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -17,8 +19,9 @@ import { AuthModule } from './auth/auth.module';
       load: [config],
     }),
     AuthModule,
-    ImagesModule,
     SensorsModule,
+    PowerModule,
+    ImagesModule,
     RouterModule.register([
       {
         path: '/enviroment',
@@ -40,7 +43,7 @@ import { AuthModule } from './auth/auth.module';
       },
     ]),
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

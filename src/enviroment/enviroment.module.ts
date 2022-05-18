@@ -14,13 +14,13 @@ import { CronModule } from './crons/cron.module';
     ConfigModule.forRoot({
       load: [config],
     }),
-    SensorsModule,
     ImagesModule,
     PowerModule,
     HttpModule,
     CronModule,
-    EnviromentService,
+    SensorsModule,
   ],
+  providers: [EnviromentService],
   controllers: [EnviromentController],
 })
 export class EnviromentModule {}

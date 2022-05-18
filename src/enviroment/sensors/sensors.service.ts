@@ -37,17 +37,18 @@ export class SensorsService {
       'check_water_pump',
       CronExpression.EVERY_5_SECONDS,
       async () => {
-        if (true) {
-          // if (sensors.getSensor('water_pump') > 30) {
-          // const response: any = await this.http
-          //   .post(`/api/${process.env.API_VERSION}/power/1`, { status: 1 })
-          //   .toPromise()
-          //   .then(({ data }) => console.log('eee', data))
-          //   .catch((error) => {
-          //     console.log('ERROR', error);
-          //     const data = error?.response?.data;
-          //     throw new HttpException(data?.message, data?.statusCode ?? 500);
-          //   });
+        const { distance } = this.getSensor('waterPump');
+        if (distance <= 30) {
+          const URL = `${process.env.API_URL}/api/${process.env.API_VERSION}`;
+          const response: any = await this.http
+            .post(`${URL}/enviroment/power/1`, { status: 1 })
+            .toPromise()
+            .then(({ data }) => console.log('eee', data))
+            .catch((error) => {
+              console.log('ERROR', error);
+              const data = error?.response?.data;
+              throw new HttpException(data?.message, data?.statusCode ?? 500);
+            });
         }
       },
     );
