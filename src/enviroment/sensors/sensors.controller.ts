@@ -1,5 +1,16 @@
-import { Body, Controller, Get, Param, Query, Post, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Query,
+  Post,
+  Res,
+  Req,
+} from '@nestjs/common';
 import { Response } from 'express';
+import { send } from 'process';
+import { UseAuth } from 'src/decorators/UseAuth';
 import { SensorsService } from './sensors.service';
 
 @Controller()
@@ -20,10 +31,15 @@ export class SensorsController {
     // return res.send(this.sensorService.getMeasurements());
   }
 
+  // This endpoint is to persist every sensor data by passing a clientId (sensor identifier) as Bearer
+  @UseAuth()
   @Post('/')
-  setMeasurements(@Res() res, @Body() payload) {
+  setMeasurements(@Req() req: any, @Res() res, @Body() payload) {
     const { temperature, humidity, distance } = payload;
+
     this.data = { distance };
+    return res.send(this.data);
+
     // console.log('DATA', payload);
     // return res.send(
     //   this.sensorService.setMeasurements({ temperature, humidity }),

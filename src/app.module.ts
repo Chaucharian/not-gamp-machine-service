@@ -6,18 +6,19 @@ import { EnviromentModule } from './enviroment/enviroment.module';
 import { ImagesModule } from './enviroment/images/images.module';
 import { SensorsModule } from './enviroment/sensors/sensors.module';
 import { ConfigModule } from '@nestjs/config';
-import config from './config/conifg';
+import config from './config/configuration';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PowerModule } from './enviroment/power/power.module';
+import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [
-    ImagesModule,
-    SensorsModule,
-    EnviromentModule,
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       load: [config],
     }),
+    AuthModule,
+    ImagesModule,
+    SensorsModule,
     RouterModule.register([
       {
         path: '/enviroment',

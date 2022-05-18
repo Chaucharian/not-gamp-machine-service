@@ -1,38 +1,68 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import firebase from 'firebase-admin';
 import { ConfigService } from '@nestjs/config';
 import { CronManager } from '../crons/CronManager';
 import { CronExpression } from '@nestjs/schedule';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class SensorsService {
-  private measurements = {
-    temperature: '0%',
-    humidity: '0%',
+  private sensors = {
+    conditions: {
+      temperature: '0%',
+      humidity: '0%',
+    },
+    waterPump: {
+      distance: 0,
+    },
   };
   private readonly logger = new Logger(SensorsService.name);
 
   constructor(
     private configService: ConfigService,
     private cronManager: CronManager,
+    private http: HttpService,
   ) {
     firebase.initializeApp({
       credential: firebase.credential.cert(configService.get('firebase')),
       databaseURL: 'https://not-gamp-machine.firebaseio.com',
     });
 
+    // cronManager.addCronJob(
+    //   'save_conditions',
+    //   CronExpression.EVERY_2_HOURS,
+    //   () => this.writeSensorData(),
+    // );
     cronManager.addCronJob(
-      'save_conditions',
-      CronExpression.EVERY_2_HOURS,
-      () => this.writeSensorData(),
+      'check_water_pump',
+      CronExpression.EVERY_5_SECONDS,
+      async () => {
+        if (true) {
+          // if (sensors.getSensor('water_pump') > 30) {
+          // const response: any = await this.http
+          //   .post(`/api/${process.env.API_VERSION}/power/1`, { status: 1 })
+          //   .toPromise()
+          //   .then(({ data }) => console.log('eee', data))
+          //   .catch((error) => {
+          //     console.log('ERROR', error);
+          //     const data = error?.response?.data;
+          //     throw new HttpException(data?.message, data?.statusCode ?? 500);
+          //   });
+        }
+      },
     );
   }
 
-  public getMeasurements() {
-    return this.measurements;
+  public getSensor(type: string) {
+    return this.sensors[type];
   }
-  public setMeasurements({ temperature, humidity }) {
-    this.measurements = { temperature, humidity };
+
+  public setConditions({ temperature, humidity }) {
+    this.sensors.conditions = { temperature, humidity };
+  }
+
+  public setWaterPump({ distance }) {
+    this.sensors.waterPump = { distance };
   }
 
   public readSensorRange(from, to) {
@@ -56,7 +86,7 @@ export class SensorsService {
 
   private writeSensorData() {
     const timestamp = Date.now();
-    const { temperature, humidity } = this.measurements;
+    const { temperature, humidity } = this.sensors.conditions;
 
     firebase.database().ref('sensordata/data').push({
       temperature,

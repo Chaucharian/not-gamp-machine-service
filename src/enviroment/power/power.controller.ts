@@ -8,20 +8,23 @@ export class PowerController {
   constructor(private sensorService: PowerService) {}
 
   @Get('/')
-  async getPowerStatus(@Res() res: Response, @Query() params) {
-    // const { from, to } = params;
-    // const response = await this.sensorService.readSensorRange(from, to);
-    console.log('asdsd');
+  getPowerStatus(@Res() res: Response) {
+    console.log('EEEEEE');
     return res.send(this.powerStatus);
   }
 
-  @Post('/')
-  setPowerStatus(@Res() res, @Body() payload) {
-    this.powerStatus = payload;
-    return res.send('ok');
-    // console.log('DATA', payload);
-    // return res.send(
-    //   this.sensorService.setMeasurements({ temperature, humidity }),
-    // );
+  @Post(':outledId')
+  setPowerStatus(
+    @Res() res,
+    @Param('outledId') outledId: string,
+    @Body() payload,
+  ) {
+    console.log('EE');
+    const newStatus = {
+      ...this.powerStatus,
+      [`outlet${outledId}`]: payload.status,
+    };
+    this.powerStatus = newStatus;
+    return res.send(newStatus);
   }
 }
