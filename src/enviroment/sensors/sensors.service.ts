@@ -9,8 +9,8 @@ import { HttpService } from '@nestjs/axios';
 export class SensorsService {
   private sensors = {
     conditions: {
-      temperature: '0%',
-      humidity: '0%',
+      temperature: 0,
+      humidity: 0,
     },
     waterPump: {
       distance: 0,
@@ -40,18 +40,22 @@ export class SensorsService {
         const { distance } = this.getSensor('waterPump');
         if (distance <= 30) {
           const URL = `${process.env.API_URL}/api/${process.env.API_VERSION}`;
-          const response: any = await this.http
-            .post(`${URL}/enviroment/power/1`, { status: 1 })
-            .toPromise()
-            .then(({ data }) => console.log('eee', data))
-            .catch((error) => {
-              console.log('ERROR', error);
-              const data = error?.response?.data;
-              throw new HttpException(data?.message, data?.statusCode ?? 500);
-            });
+          // const response: any = await this.http
+          //   .post(`${URL}/enviroment/power/1`, { status: 1 })
+          //   .toPromise()
+          //   .then(({ data }) => console.log('eee', data))
+          //   .catch((error) => {
+          //     console.log('ERROR', error);
+          //     const data = error?.response?.data;
+          //     throw new HttpException(data?.message, data?.statusCode ?? 500);
+          //   });
         }
       },
     );
+  }
+
+  public getMeasurements() {
+    return this.sensors;
   }
 
   public getSensor(type: string) {
