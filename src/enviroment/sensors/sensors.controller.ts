@@ -27,7 +27,9 @@ export class SensorsController {
   @Post('/')
   setMeasurements(@Req() req: any, @Res() res, @Body() payload) {
     // ideally using the clientId the payload data is mapped out  (i.e sensors[clientId] = payload)
-    return this.sensorService.setConditions(payload);
+    return res.send(
+      this.sensorService.setConditions({ client: req.client, payload }),
+    );
   }
 
   @Get('/range')

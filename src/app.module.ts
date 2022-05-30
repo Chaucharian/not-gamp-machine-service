@@ -18,6 +18,7 @@ import { AppController } from './app.controller';
     ConfigModule.forRoot({
       load: [config],
     }),
+    EnviromentModule,
     AuthModule,
     SensorsModule,
     PowerModule,
