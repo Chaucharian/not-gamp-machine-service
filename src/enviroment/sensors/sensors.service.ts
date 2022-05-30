@@ -48,12 +48,12 @@ export class SensorsService {
       CronExpression.EVERY_2_HOURS,
       () => this.storeConditions(),
     );
-    // this.cronManager.addCronJob(
-    //   'check_irrigation',
-    //   // CronExpression.EVERY_MINUTE,
-    //   CronExpression.EVERY_5_SECONDS,
-    //   async () => await this.checkIrrigation(),
-    // );
+    this.cronManager.addCronJob(
+      'check_irrigation',
+      // CronExpression.EVERY_MINUTE,
+      CronExpression.EVERY_5_SECONDS,
+      async () => await this.checkIrrigation(),
+    );
     this.cronManager.addCronJob(
       'check_lights',
       CronExpression.EVERY_HOUR,
