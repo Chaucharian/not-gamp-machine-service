@@ -122,7 +122,7 @@ export class SensorsService {
       });
 
     if (isOn) {
-      if (waterLevel <= minWaterLevel) {
+      if (Number(waterLevel) <= minWaterLevel) {
         this.changePowerOutletState(
           POWER_OUTLET_IDS.IRRIGATION,
           POWER_OUTLET_STATUS.OFF,
