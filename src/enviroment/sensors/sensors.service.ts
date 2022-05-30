@@ -217,7 +217,7 @@ export class SensorsService {
 
     firebase
       .database()
-      .ref(`environment/`)
+      .ref(`environment`)
       .set({
         ...this.sensors,
         id: environmentId,
