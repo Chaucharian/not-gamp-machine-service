@@ -19,7 +19,7 @@ enum POWER_OUTLET_STATUS {
 export class SensorsService {
   private sensors = {
     irrigation: {
-      lastStartTime: 0,
+      lastStartTime: Date.now(),
       // runEveryMinutes: 60,
       runEveryMinutes: 2,
       // workingTime: 5,
@@ -149,7 +149,6 @@ export class SensorsService {
 
     const newIrrigationData = {
       ...this.sensors.irrigation,
-      isOn,
     };
 
     if (isOn && shouldFinishWorking) {
@@ -157,13 +156,13 @@ export class SensorsService {
         POWER_OUTLET_IDS.IRRIGATION,
         POWER_OUTLET_STATUS.OFF,
       );
-      newIrrigationData.lastStartTime = currentTime;
       newIrrigationData.isOn = false;
     } else if (shouldRun) {
       this.changePowerOutletState(
         POWER_OUTLET_IDS.IRRIGATION,
         POWER_OUTLET_STATUS.ON,
       );
+      newIrrigationData.lastStartTime = currentTime;
       newIrrigationData.isOn = true;
     }
 
