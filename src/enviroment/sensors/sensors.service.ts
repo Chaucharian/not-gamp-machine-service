@@ -145,7 +145,6 @@ export class SensorsService {
         }
         const newIrrigationData = {
           ...this.sensors.irrigation,
-          lastStartTime: currentTime,
           isOn: false,
         };
         this.sensors.irrigation = newIrrigationData;
