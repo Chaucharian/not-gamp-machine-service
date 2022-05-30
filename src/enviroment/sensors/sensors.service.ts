@@ -45,8 +45,13 @@ export class SensorsService {
   private initializeCrons() {
     this.cronManager.addCronJob(
       'save_conditions',
-      CronExpression.EVERY_2_HOURS,
+      CronExpression.EVERY_5_SECONDS,
       () => this.storeConditions(),
+    );
+    this.cronManager.addCronJob(
+      'save_conditions',
+      CronExpression.EVERY_2_HOURS,
+      () => this.storeConditionsHistory(),
     );
     this.cronManager.addCronJob(
       'check_irrigation',
@@ -106,16 +111,20 @@ export class SensorsService {
   }
 
   private async checkIrrigation() {
-    const { lastStartTime, runEveryMinutes, workingTime, minWaterLevel, isOn } =
-      await firebase
-        .database()
-        .ref('environment/irrigation')
-        .once('value')
-        .then((snapshot) => {
-          return snapshot.val();
-        });
-
-    const { distance: waterLevel } = this.sensors.irrigation;
+    const {
+      lastStartTime,
+      runEveryMinutes,
+      workingTime,
+      minWaterLevel,
+      distance: waterLevel,
+      isOn,
+    } = await firebase
+      .database()
+      .ref('environment/irrigation')
+      .once('value')
+      .then((snapshot) => {
+        return snapshot.val();
+      });
 
     if (isOn) {
       if (Number(waterLevel) <= minWaterLevel) {
@@ -204,6 +213,20 @@ export class SensorsService {
   }
 
   private async storeConditions() {
+    const environmentId = await this.getCurrentEnviromentId();
+
+    firebase
+      .database()
+      .ref(`environment/`)
+      .set({
+        ...this.sensors,
+        id: environmentId,
+      });
+
+    this.logger.log(`Current conditions stored on enviroment ${environmentId}`);
+  }
+
+  private async storeConditionsHistory() {
     const timestamp = Date.now();
     const { temperature, humidity } = this.sensors.conditions;
     const environmentId = await this.getCurrentEnviromentId();
