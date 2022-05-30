@@ -23,7 +23,7 @@ export class SensorsService {
       lastStartTime: 0,
       runEveryMinutes: 60,
       workingTime: 5,
-      waterLevel: 0,
+      distance: 0,
       isOn: false,
     },
     conditions: {
@@ -80,17 +80,10 @@ export class SensorsService {
 
   public setConditions({ client, payload }) {
     this.sensors[client.clientName] = {
+      ...this.sensors[client.clientName],
       ...payload,
     };
     return this.sensors[client.clientName];
-  }
-
-  public setIrrigation({ client, payload }) {
-    this.sensors.irrigation[client.clientName] = {
-      ...this.sensors.irrigation,
-      ...payload,
-    };
-    return this.sensors.irrigation[client.clientName];
   }
 
   public readSensorRange(from, to) {
@@ -113,14 +106,19 @@ export class SensorsService {
   }
 
   private async checkIrrigation() {
-    const { lastStartTime, runEveryMinutes, workingTime, waterLevel, isOn } =
-      await firebase
-        .database()
-        .ref('environment/irrigation')
-        .once('value')
-        .then((snapshot) => {
-          return snapshot.val();
-        });
+    const {
+      lastStartTime,
+      runEveryMinutes,
+      workingTime,
+      distance: waterLevel,
+      isOn,
+    } = await firebase
+      .database()
+      .ref('environment/irrigation')
+      .once('value')
+      .then((snapshot) => {
+        return snapshot.val();
+      });
 
     if (isOn) {
       if (waterLevel <= MIN_WATER_LEVEL_ALLOWED) {
