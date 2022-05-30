@@ -23,7 +23,7 @@ export class SensorsService {
       runEveryMinutes: 60,
       workingTime: 5,
       distance: 0,
-      minWaterLevel: 0,
+      minWaterLevel: 27,
       isOn: false,
     },
     conditions: {
