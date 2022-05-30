@@ -106,20 +106,16 @@ export class SensorsService {
   }
 
   private async checkIrrigation() {
-    const {
-      lastStartTime,
-      runEveryMinutes,
-      workingTime,
-      distance: waterLevel,
-      minWaterLevel,
-      isOn,
-    } = await firebase
-      .database()
-      .ref('environment/irrigation')
-      .once('value')
-      .then((snapshot) => {
-        return snapshot.val();
-      });
+    const { lastStartTime, runEveryMinutes, workingTime, minWaterLevel, isOn } =
+      await firebase
+        .database()
+        .ref('environment/irrigation')
+        .once('value')
+        .then((snapshot) => {
+          return snapshot.val();
+        });
+
+    const { distance: waterLevel } = this.sensors.irrigation;
 
     if (isOn) {
       if (Number(waterLevel) <= minWaterLevel) {
