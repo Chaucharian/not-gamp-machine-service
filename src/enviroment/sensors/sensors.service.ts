@@ -138,6 +138,17 @@ export class SensorsService {
             POWER_OUTLET_STATUS.OFF,
           );
         }
+        const newIrrigationData = {
+          ...this.sensors.irrigation,
+          lastStartTime: currentTime,
+          isOn: false,
+        };
+        this.sensors.irrigation = newIrrigationData;
+
+        await firebase
+          .database()
+          .ref(`environment/irrigation`)
+          .set(newIrrigationData);
       }
     } else {
       const currentTime = Date.now();
