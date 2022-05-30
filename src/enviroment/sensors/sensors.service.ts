@@ -126,34 +126,34 @@ export class SensorsService {
         return snapshot.val();
       });
 
+    if (Number(waterLevel) >= minWaterLevel) {
+      this.changePowerOutletState(
+        POWER_OUTLET_IDS.IRRIGATION,
+        POWER_OUTLET_STATUS.OFF,
+      );
+    }
+
     if (isOn) {
-      if (Number(waterLevel) <= minWaterLevel) {
+      const currentTime = Date.now();
+      const shouldTurnOff =
+        currentTime - lastStartTime >= this.minutesToMillisecons(workingTime);
+
+      if (shouldTurnOff) {
         this.changePowerOutletState(
           POWER_OUTLET_IDS.IRRIGATION,
           POWER_OUTLET_STATUS.OFF,
         );
-      } else {
-        const currentTime = Date.now();
-        const shouldTurnOff =
-          currentTime - lastStartTime >= this.minutesToMillisecons(workingTime);
-
-        if (shouldTurnOff) {
-          this.changePowerOutletState(
-            POWER_OUTLET_IDS.IRRIGATION,
-            POWER_OUTLET_STATUS.OFF,
-          );
-        }
-        const newIrrigationData = {
-          ...this.sensors.irrigation,
-          isOn: false,
-        };
-        this.sensors.irrigation = newIrrigationData;
-
-        await firebase
-          .database()
-          .ref(`environment/irrigation`)
-          .set(newIrrigationData);
       }
+      const newIrrigationData = {
+        ...this.sensors.irrigation,
+        isOn: false,
+      };
+      this.sensors.irrigation = newIrrigationData;
+
+      await firebase
+        .database()
+        .ref(`environment/irrigation`)
+        .set(newIrrigationData);
     } else {
       const currentTime = Date.now();
       const shouldTurnOn =
@@ -182,7 +182,7 @@ export class SensorsService {
   }
 
   private minutesToMillisecons(data) {
-    return 1000 / 60 / data;
+    return 1000 * 60 * data;
   }
 
   private async changePowerOutletState(outledId: number, status = 0) {
