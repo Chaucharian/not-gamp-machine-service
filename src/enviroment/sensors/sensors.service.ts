@@ -44,12 +44,12 @@ export class SensorsService {
 
   private initializeCrons() {
     this.cronManager.addCronJob(
-      'save_conditions',
+      'save_current_conditions',
       CronExpression.EVERY_5_SECONDS,
       () => this.storeConditions(),
     );
     this.cronManager.addCronJob(
-      'save_conditions',
+      'save_history_conditions',
       CronExpression.EVERY_2_HOURS,
       () => this.storeConditionsHistory(),
     );
