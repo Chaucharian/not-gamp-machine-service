@@ -20,8 +20,10 @@ export class SensorsService {
   private sensors = {
     irrigation: {
       lastStartTime: 0,
-      runEveryMinutes: 60,
-      workingTime: 5,
+      // runEveryMinutes: 60,
+      runEveryMinutes: 2,
+      // workingTime: 5,
+      workingTime: 1,
       distance: 0,
       minWaterLevel: 27,
       isOn: false,
