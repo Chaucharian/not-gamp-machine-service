@@ -5,7 +5,6 @@ import { CronManager } from '../crons/CronManager';
 import { CronExpression } from '@nestjs/schedule';
 import { HttpService } from '@nestjs/axios';
 
-const MIN_WATER_LEVEL_ALLOWED = 30;
 enum POWER_OUTLET_IDS {
   IRRIGATION = 1,
   LIGHTS = 2,
@@ -24,6 +23,7 @@ export class SensorsService {
       runEveryMinutes: 60,
       workingTime: 5,
       distance: 0,
+      minWaterLevel: 0,
       isOn: false,
     },
     conditions: {
@@ -111,6 +111,7 @@ export class SensorsService {
       runEveryMinutes,
       workingTime,
       distance: waterLevel,
+      minWaterLevel,
       isOn,
     } = await firebase
       .database()
@@ -121,7 +122,7 @@ export class SensorsService {
       });
 
     if (isOn) {
-      if (waterLevel <= MIN_WATER_LEVEL_ALLOWED) {
+      if (waterLevel <= minWaterLevel) {
         this.changePowerOutletState(
           POWER_OUTLET_IDS.IRRIGATION,
           POWER_OUTLET_STATUS.OFF,
