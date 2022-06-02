@@ -4,6 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import { CronManager } from '../crons/CronManager';
 import { CronExpression } from '@nestjs/schedule';
 import { HttpService } from '@nestjs/axios';
+import { DeviceController } from './DeviceController';
+import { format } from 'date-fns';
 
 enum POWER_OUTLET_IDS {
   IRRIGATION = 1,
@@ -19,11 +21,10 @@ enum POWER_OUTLET_STATUS {
 export class SensorsService {
   private sensors = {
     irrigation: {
-      lastStartTime: Date.now(),
+      // lastStartTime: Date.now(),
       // runEveryMinutes: 60,
-      runEveryMinutes: 2,
-      // workingTime: 5,
-      workingTime: 1,
+      inactiveTime: 2,
+      activeTime: 1,
       distance: 0,
       minWaterLevel: 27,
       isOn: true,
@@ -114,57 +115,35 @@ export class SensorsService {
 
   private async checkIrrigation() {
     const {
-      lastStartTime,
-      runEveryMinutes,
-      workingTime,
+      activeTime,
+      inactiveTime,
       minWaterLevel,
       distance: waterLevel,
       isOn,
-    } = await firebase
-      .database()
-      .ref('environment/irrigation')
-      .once('value')
-      .then((snapshot) => {
-        return snapshot.val();
-      });
+    } = this.sensors.irrigation;
+    // } = await firebase
+    //   .database()
+    //   .ref('environment/irrigation')
+    //   .once('value')
+    //   .then((snapshot) => {
+    //     return snapshot.val();
+    //   });
 
-    // water level
-    if (Number(waterLevel) >= minWaterLevel) {
-      // const newIrrigationData = {
-      //   ...this.sensors.irrigation,
-      //   isOn: false,
-      // };
-      // await firebase
-      //   .database()
-      //   .ref(`environment/irrigation`)
-      //   .set(newIrrigationData);
-    }
+    const waterPump = new DeviceController(activeTime, inactiveTime, isOn);
 
-    const currentTime = Date.now();
-    const shouldFinishWorking =
-      Number(waterLevel) >= minWaterLevel ||
-      lastStartTime + this.minutesToMillisecons(workingTime) >= currentTime;
-    const shouldRun =
-      lastStartTime + this.minutesToMillisecons(runEveryMinutes) >= currentTime;
-
-    const newIrrigationData = {
-      ...this.sensors.irrigation,
-    };
-
-    if (isOn && shouldFinishWorking) {
-      this.changePowerOutletState(
-        POWER_OUTLET_IDS.IRRIGATION,
-        POWER_OUTLET_STATUS.OFF,
-      );
-      newIrrigationData.isOn = false;
-    } else if (shouldRun) {
-      this.changePowerOutletState(
-        POWER_OUTLET_IDS.IRRIGATION,
-        POWER_OUTLET_STATUS.ON,
-      );
-      newIrrigationData.lastStartTime = currentTime;
-      newIrrigationData.isOn = true;
-    }
+    waterPump.addCondition((state) => {
+      if (waterLevel >= minWaterLevel) {
+        console.log(
+          `minimum water level reached shutting down! ${format(
+            new Date().getTime(),
+            'pp',
+          )}, please fill it up asshole!`,
+        );
+        state.isOn = false;
+        return state;
+      }
+    });
+    const newIrrigationData = waterPump.getState();
 
     await firebase
       .database()
