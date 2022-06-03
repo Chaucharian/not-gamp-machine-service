@@ -56,7 +56,7 @@ export class SensorsService implements OnModuleInit {
   }
 
   private async initializeDevices() {
-    const { activeTime, inactiveTime, isOn, waterLevel } = await firebase
+    const { activeTime, inactiveTime, isOn, minWaterLevel } = await firebase
       .database()
       .ref('environment/irrigation')
       .once('value')
@@ -76,7 +76,7 @@ export class SensorsService implements OnModuleInit {
       .database()
       .ref(`environment/irrigation`)
       .set({
-        waterLevel,
+        minWaterLevel,
         ...initialState,
       });
   }
