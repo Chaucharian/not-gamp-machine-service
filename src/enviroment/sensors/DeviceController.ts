@@ -12,14 +12,8 @@ export interface DeviceState {
   startAt?: Date | number;
 }
 
-export interface DeviceControllerProps {
-  isOn?: boolean;
-  /**
-   * activeTime: a number representing minutes.
-   */
-  activeTime: number;
-  inactiveTime: number;
-  startAt?: Date | number;
+export interface DeviceControllerProps
+  extends Omit<DeviceState, 'expirationTime'> {
   deviceName: string;
 }
 
