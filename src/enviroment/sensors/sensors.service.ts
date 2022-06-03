@@ -56,7 +56,7 @@ export class SensorsService implements OnModuleInit {
   }
 
   private async initializeDevices() {
-    const { activeTime, inactiveTime, startAt, isOn } = await firebase
+    const { activeTime, inactiveTime, isOn } = await firebase
       .database()
       .ref('environment/irrigation')
       .once('value')
@@ -69,7 +69,6 @@ export class SensorsService implements OnModuleInit {
       activeTime,
       inactiveTime,
       isOn,
-      startAt: startAt,
     });
   }
 
@@ -171,7 +170,11 @@ export class SensorsService implements OnModuleInit {
     await firebase
       .database()
       .ref(`environment/irrigation`)
-      .set({ ...irrigationResponse, isOn: newIrrigationState.isOn });
+      .set({
+        ...irrigationResponse,
+        expirationTime: newIrrigationState.expirationTime,
+        isOn: newIrrigationState.isOn,
+      });
   }
 
   private minutesToMillisecons(data) {
