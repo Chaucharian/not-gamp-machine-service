@@ -1,11 +1,16 @@
-import { HttpException, Injectable, Logger } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  Logger,
+  OnModuleInit,
+} from '@nestjs/common';
 import firebase from 'firebase-admin';
 import { ConfigService } from '@nestjs/config';
 import { CronManager } from '../crons/CronManager';
 import { CronExpression } from '@nestjs/schedule';
 import { HttpService } from '@nestjs/axios';
 import { DeviceController } from './DeviceController';
-import { format } from 'date-fns';
+import { addMinutes, format } from 'date-fns';
 
 enum POWER_OUTLET_IDS {
   IRRIGATION = 1,
@@ -18,21 +23,23 @@ enum POWER_OUTLET_STATUS {
   OFF = 0,
 }
 @Injectable()
-export class SensorsService {
+export class SensorsService implements OnModuleInit {
   private sensors = {
     irrigation: {
-      // lastStartTime: Date.now(),
-      // runEveryMinutes: 60,
-      inactiveTime: 2,
-      activeTime: 1,
-      distance: 0,
+      inactiveTime: 60,
+      activeTime: 5,
+      startAt: 0,
       minWaterLevel: 27,
-      isOn: true,
+      isOn: false,
     },
     conditions: {
       temperature: 0,
       humidity: 0,
+      distance: 0,
     },
+  };
+  private devices = {
+    irrigation: null,
   };
   private readonly logger = new Logger(SensorsService.name);
 
@@ -40,9 +47,32 @@ export class SensorsService {
     private configService: ConfigService,
     private cronManager: CronManager,
     private http: HttpService,
-  ) {
+  ) {}
+  onModuleInit() {
+    this.init();
+  }
+
+  private async init() {
+    await this.initializeDevices();
     this.initializeCrons();
-    this.logger.log(`Crons initialized`);
+  }
+
+  private async initializeDevices() {
+    const { activeTime, inactiveTime, startAt, isOn } = await firebase
+      .database()
+      .ref('environment/irrigation')
+      .once('value')
+      .then((snapshot) => {
+        return snapshot.val();
+      });
+
+    this.devices.irrigation = new DeviceController({
+      deviceName: 'Irrigation',
+      activeTime,
+      inactiveTime,
+      isOn,
+      startAt: startAt,
+    });
   }
 
   private initializeCrons() {
@@ -62,24 +92,25 @@ export class SensorsService {
       CronExpression.EVERY_5_SECONDS,
       async () => await this.checkIrrigation(),
     );
-    this.cronManager.addCronJob(
-      'check_lights',
-      CronExpression.EVERY_HOUR,
-      async () => {
-        // check current cycle (vegetative/ )
-        const URL = `${process.env.API_URL}/api/${process.env.API_VERSION}`;
-        // const response: any = await this.http
-        //   .post(`${URL}/enviroment/power/1`, { status: 1 })
-        //   .toPromise()
-        //   .then(({ data }) => console.log('eee', data))
-        //   .catch((error) => {
-        //     console.log('ERROR', error);
-        //     const data = error?.response?.data;
-        //     throw new HttpException(data?.message, data?.statusCode ?? 500);
-        //   });
-        // }
-      },
-    );
+    // this.cronManager.addCronJob(
+    //   'check_lights',
+    //   CronExpression.EVERY_HOUR,
+    //   async () => {
+    //     // check current cycle (vegetative/ )
+    //     const URL = `${process.env.API_URL}/api/${process.env.API_VERSION}`;
+    //     // const response: any = await this.http
+    //     //   .post(`${URL}/enviroment/power/1`, { status: 1 })
+    //     //   .toPromise()
+    //     //   .then(({ data }) => console.log('eee', data))
+    //     //   .catch((error) => {
+    //     //     console.log('ERROR', error);
+    //     //     const data = error?.response?.data;
+    //     //     throw new HttpException(data?.message, data?.statusCode ?? 500);
+    //     //   });
+    //     // }
+    //   },
+    // );
+    this.logger.log(`Crons initialized`);
   }
 
   public getMeasurements() {
@@ -114,24 +145,17 @@ export class SensorsService {
   }
 
   private async checkIrrigation() {
-    const {
-      activeTime,
-      inactiveTime,
-      minWaterLevel,
-      distance: waterLevel,
-      isOn,
-    } = this.sensors.irrigation;
-    // } = await firebase
-    //   .database()
-    //   .ref('environment/irrigation')
-    //   .once('value')
-    //   .then((snapshot) => {
-    //     return snapshot.val();
-    //   });
+    const { distance: waterLevel } = this.sensors.conditions;
+    const { minWaterLevel } = await firebase
+      .database()
+      .ref('environment/irrigation')
+      .once('value')
+      .then((snapshot) => {
+        return snapshot.val();
+      });
 
-    const waterPump = new DeviceController(activeTime, inactiveTime, isOn);
-
-    waterPump.addCondition((state) => {
+    // this.devices.irrigation.setStartingTime(startAt);
+    this.devices.irrigation.addCondition((state) => {
       if (waterLevel >= minWaterLevel) {
         console.log(
           `minimum water level reached shutting down! ${format(
@@ -143,12 +167,16 @@ export class SensorsService {
         return state;
       }
     });
-    const newIrrigationData = waterPump.getState();
+    const newIrrigationState = this.devices.irrigation.getState();
 
+    this.sensors.irrigation = {
+      ...this.sensors.irrigation,
+      ...newIrrigationState,
+    };
     await firebase
       .database()
       .ref(`environment/irrigation`)
-      .set(newIrrigationData);
+      .set({ ...this.sensors.irrigation, isOn: newIrrigationState.isOn });
   }
 
   private minutesToMillisecons(data) {
@@ -186,9 +214,9 @@ export class SensorsService {
 
     firebase
       .database()
-      .ref(`environment`)
+      .ref(`environment/conditions`)
       .set({
-        ...this.sensors,
+        ...this.sensors.conditions,
         id: environmentId,
       });
 
