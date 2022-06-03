@@ -22,23 +22,21 @@ enum POWER_OUTLET_STATUS {
   ON = 1,
   OFF = 0,
 }
+
+interface Devices {
+  irrigation: DeviceController | null;
+}
+
 @Injectable()
 export class SensorsService implements OnModuleInit {
   private sensors = {
-    irrigation: {
-      inactiveTime: 60,
-      activeTime: 5,
-      startAt: 0,
-      minWaterLevel: 27,
-      isOn: false,
-    },
     conditions: {
       temperature: 0,
       humidity: 0,
       distance: 0,
     },
   };
-  private devices = {
+  private devices: Devices = {
     irrigation: null,
   };
   private readonly logger = new Logger(SensorsService.name);
@@ -146,7 +144,7 @@ export class SensorsService implements OnModuleInit {
 
   private async checkIrrigation() {
     const { distance: waterLevel } = this.sensors.conditions;
-    const { minWaterLevel } = await firebase
+    const irrigationResponse = await firebase
       .database()
       .ref('environment/irrigation')
       .once('value')
@@ -154,29 +152,25 @@ export class SensorsService implements OnModuleInit {
         return snapshot.val();
       });
 
-    // this.devices.irrigation.setStartingTime(startAt);
-    this.devices.irrigation.addCondition((state) => {
-      if (waterLevel >= minWaterLevel) {
-        console.log(
-          `minimum water level reached shutting down! ${format(
-            new Date().getTime(),
-            'pp',
-          )}, please fill it up asshole!`,
-        );
-        state.isOn = false;
-        return state;
-      }
-    });
-    const newIrrigationState = this.devices.irrigation.getState();
+    const newIrrigationState = this.devices.irrigation.getState(
+      function onValidateCondition() {
+        if (waterLevel >= irrigationResponse.minWaterLevel) {
+          console.log(
+            `minimum water level reached shutting down! ${format(
+              new Date().getTime(),
+              'pp',
+            )}, please fill it up asshole!`,
+          );
+          return false;
+        }
+        return true;
+      },
+    );
 
-    this.sensors.irrigation = {
-      ...this.sensors.irrigation,
-      ...newIrrigationState,
-    };
     await firebase
       .database()
       .ref(`environment/irrigation`)
-      .set({ ...this.sensors.irrigation, isOn: newIrrigationState.isOn });
+      .set({ ...irrigationResponse, isOn: newIrrigationState.isOn });
   }
 
   private minutesToMillisecons(data) {
@@ -217,7 +211,6 @@ export class SensorsService implements OnModuleInit {
       .ref(`environment/conditions`)
       .set({
         ...this.sensors.conditions,
-        id: environmentId,
       });
 
     this.logger.log(`Current conditions stored on enviroment ${environmentId}`);

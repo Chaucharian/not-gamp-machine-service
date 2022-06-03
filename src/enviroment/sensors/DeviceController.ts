@@ -9,10 +9,20 @@ export interface DeviceState {
   activeTime: number;
   inactiveTime: number;
   startAt?: Date | number;
+}
+
+export interface DeviceControllerProps {
+  isOn?: boolean;
+  /**
+   * activeTime: a number representing minutes.
+   */
+  activeTime: number;
+  inactiveTime: number;
+  startAt?: Date | number;
   deviceName: string;
 }
 
-type ConditionCallback = (state: DeviceState) => DeviceState;
+type ConditionCallback = () => boolean;
 
 export class DeviceController {
   private state = {
@@ -31,7 +41,7 @@ export class DeviceController {
     inactiveTime,
     isOn = false,
     startAt,
-  }: DeviceState) {
+  }: DeviceControllerProps) {
     if (!deviceName) {
       this.logger.error('DeviceController is missing deviceName');
       throw new Error('DeviceController is missing deviceName');
@@ -66,20 +76,20 @@ export class DeviceController {
     ).getTime();
   }
 
-  public getState(): DeviceState {
+  public getState(onValidateCondition: ConditionCallback): DeviceState {
     const { expirationTime, activeTime, inactiveTime } = this.state;
     const currentTime = Date.now();
-    let newState = null;
+    let newState = this.state;
 
-    this.conditions.forEach((condition) => {
-      newState = condition(this.state);
-    });
+    // this.conditions.forEach((condition) => {
+    //   newState = condition(this.state);
+    // });
 
-    if (newState) {
+    if (!onValidateCondition()) {
+      newState.isOn = false;
       return newState;
     }
 
-    newState = this.state;
     if (currentTime >= expirationTime) {
       if (newState.isOn) {
         const expirationTime = new Date(
