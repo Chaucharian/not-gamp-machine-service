@@ -153,6 +153,7 @@ export class SensorsService implements OnModuleInit {
       });
 
     const newIrrigationState = this.devices.irrigation.getState(
+      irrigationResponse,
       function onValidateCondition() {
         if (waterLevel >= irrigationResponse.minWaterLevel) {
           console.log(
