@@ -8,6 +8,7 @@ export interface DeviceState {
    */
   activeTime: number;
   inactiveTime: number;
+  expirationTime: Date | number;
   startAt?: Date | number;
 }
 
@@ -25,7 +26,7 @@ export interface DeviceControllerProps {
 type ConditionCallback = () => boolean;
 
 export class DeviceController {
-  private state = {
+  private state: DeviceState = {
     activeTime: 0,
     inactiveTime: 0,
     expirationTime: 0,
@@ -76,16 +77,20 @@ export class DeviceController {
     ).getTime();
   }
 
-  public getState(onValidateCondition: ConditionCallback): DeviceState {
-    const { expirationTime, activeTime, inactiveTime } = this.state;
+  public getState(
+    currentState?: DeviceState,
+    onValidateCondition?: ConditionCallback,
+  ): DeviceState {
+    const state = currentState ?? this.state;
+    const { expirationTime, activeTime, inactiveTime } = state;
     const currentTime = Date.now();
-    let newState = this.state;
+    let newState = state;
 
     // this.conditions.forEach((condition) => {
     //   newState = condition(this.state);
     // });
 
-    if (!onValidateCondition()) {
+    if (typeof onValidateCondition === 'function' && !onValidateCondition()) {
       newState.isOn = false;
       return newState;
     }
