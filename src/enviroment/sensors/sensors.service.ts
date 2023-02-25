@@ -51,7 +51,8 @@ export class SensorsService implements OnModuleInit {
   }
 
   private async init() {
-    await this.initializeDevices();
+    // this.getMeasurements();
+    // await this.initializeDevices();
     this.initializeCrons();
   }
 
@@ -82,22 +83,22 @@ export class SensorsService implements OnModuleInit {
   }
 
   private initializeCrons() {
-    this.cronManager.addCronJob(
-      'save_current_conditions',
-      CronExpression.EVERY_5_SECONDS,
-      () => this.storeConditions(),
-    );
+    // this.cronManager.addCronJob(
+    //   'save_current_conditions',
+    //   CronExpression.EVERY_5_SECONDS,
+    //   () => this.storeConditions(),
+    // );
     this.cronManager.addCronJob(
       'save_history_conditions',
-      CronExpression.EVERY_2_HOURS,
+      CronExpression.EVERY_HOUR,
       () => this.storeConditionsHistory(),
     );
-    this.cronManager.addCronJob(
-      'check_irrigation',
-      // CronExpression.EVERY_MINUTE,
-      CronExpression.EVERY_5_SECONDS,
-      async () => await this.checkIrrigation(),
-    );
+    // this.cronManager.addCronJob(
+    //   'check_irrigation',
+    //   // CronExpression.EVERY_MINUTE,
+    //   CronExpression.EVERY_5_SECONDS,
+    //   async () => await this.checkIrrigation(),
+    // );
     // this.cronManager.addCronJob(
     //   'check_lights',
     //   CronExpression.EVERY_HOUR,
@@ -120,15 +121,28 @@ export class SensorsService implements OnModuleInit {
   }
 
   public getMeasurements() {
-    return this.sensors;
+    return this.sensors.conditions;
+    // const a = await firebase
+    //   .database()
+    //   .ref('sensordata')
+    //   .once('value')
+    //   // .once('child_added')
+    //   .then((snapshot) => {
+    //     // Object.keys(snapshot.val()).sort( (a,b) => a  b)
+    //     console.log(snapshot.val());
+    //     return snapshot.val();
+    //   });
+    // console.log(a);
+    // return this.sensors;
   }
 
-  public setConditions({ client, payload }) {
-    this.sensors[client.clientName] = {
-      ...this.sensors[client.clientName],
-      ...payload,
-    };
-    return this.sensors[client.clientName];
+  public setConditions({ payload }) {
+    // this.sensors[client.clientName] = {
+    //   ...this.sensors[client.clientName],
+    //   ...payload,
+    // };
+    this.sensors.conditions = payload;
+    return payload;
   }
 
   public readSensorRange(from, to) {
@@ -231,14 +245,18 @@ export class SensorsService implements OnModuleInit {
 
   private async storeConditionsHistory() {
     const timestamp = Date.now();
-    const { temperature, humidity } = this.sensors.conditions;
+    // const { temperature, humidity } = this.sensors.conditions;
     const environmentId = await this.getCurrentEnviromentId();
 
-    firebase.database().ref(`history/${environmentId}`).push({
-      temperature,
-      humidity,
-      timestamp,
-    });
+    firebase
+      .database()
+      .ref(`history/${environmentId}`)
+      .push({
+        // temperature,
+        // humidity,
+        ...this.sensors.conditions,
+        timestamp,
+      });
 
     this.logger.log(
       `Conditions stored on enviroment ${environmentId} correctly at ${timestamp}`,

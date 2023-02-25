@@ -22,7 +22,7 @@ import { AppController } from './app.controller';
     AuthModule,
     SensorsModule,
     PowerModule,
-    ImagesModule,
+    // ImagesModule,
     RouterModule.register([
       {
         path: '/enviroment',

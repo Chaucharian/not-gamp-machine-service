@@ -14,7 +14,7 @@ import { CronModule } from './crons/cron.module';
     ConfigModule.forRoot({
       load: [config],
     }),
-    ImagesModule,
+    // ImagesModule,
     PowerModule,
     HttpModule,
     CronModule,
