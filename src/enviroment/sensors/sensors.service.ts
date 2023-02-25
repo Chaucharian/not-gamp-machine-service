@@ -121,7 +121,7 @@ export class SensorsService implements OnModuleInit {
   }
 
   public getMeasurements() {
-    return this.sensors.conditions;
+    return this.sensors;
     // const a = await firebase
     //   .database()
     //   .ref('sensordata')
